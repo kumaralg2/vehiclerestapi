@@ -21,10 +21,27 @@ class MakerController extends Controller
         }
         return response() -> json(['data'=>$maker],200);
     }
-    //Store 
+    //Store-posts the name and phone data 
     public function store(CreateMakerRequest $request){
         $values = $request->only(['name','phone']);
         Maker::create($values);
         return response()->json(['message'=>'Maker correctly added'],201);
+    }
+     
+     //Update-Update the Maker fields 
+     public function update(CreateMakerRequest $request,$id){
+        $maker = Maker::find($id);
+        if(!$maker){
+            return response()->json(['message'=>'This maker does not exist','code'=>404],404);
+        }
+        $name = $request->get('name');
+        $phone = $request->get('phone');
+
+        $maker->name = $name;
+        $maker->phone = $phone;
+        
+        $maker->save();
+        return response()->json(['message'=>'The Maker has been updated','code'=>201],201);
+
     }
 }
