@@ -63,7 +63,26 @@ class MakerVehiclesController extends Controller
         $vehicle->capacity = $capacity;
         $vehicle->speed = $speed;
         
-        $maker->save();
+        $vehicle->save();
         return response()->json(['message'=>'The Maker has been updated','code'=>201],201);
     }
+
+     //Delete Vehicle 
+     public function destroy($makerId,$vehicleId){
+        //Get Maker with the id
+        $maker = Maker::find($makerId);
+        //Checking whether the Maker Exists
+        if(!$maker){
+            return response()->json(['message'=>'This maker does not exist','code'=>404],404);
+        }
+        //Get the vehicle associated with the maker
+        $vehicle = $maker->vehicles->find($vehicleId);
+        //Check whether the vehicle exists
+        if(!$vehicle){
+            return response()->json(['message'=>'This vehicle does not exist','code'=>404],404);
+        }
+       //Delete the maker
+        $vehicle -> delete();
+            return response()->json(['message'=>'The Vehicle has been deleted','code'=>200],200);
+        }
 }
