@@ -4,6 +4,10 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\User;
+
+use Tymon\JWTAuth\Exceptions\JWTException;
+use JWTAuth;
+
 class AuthController extends Controller
 {
    
@@ -24,24 +28,29 @@ class AuthController extends Controller
         $name = $request->input('name');
         $email = $request->input('email');
         $password = $request->input('password');
-
-        $user = [
+       
+        $user = new User([
             'name' => $name,
             'email' => $email,
-            'password' => $password,
-            'signin' => [
+            'password' => bcrypt($password)
+        ]);
+
+        if ($user->save()) {
+            $user->signin = [
                 'href' => 'api/v1/user/signin',
                 'method' => 'POST',
                 'params' => 'email, password'
-            ]
-        ];
-
-        $response = [
-            'msg' => 'User created',
-            'user' => $user
-        ];
-
-        return response()->json($response, 201);
+            ];
+            $response = [
+                'msg' => 'User created',
+                'user' => $user
+            ];
+            return response()->json($response, 201);
+        }
+         $response = [
+         'msg' => 'An error occurred'
+         ];
+        return response()->json($response, 404);
     }
 
     /**
@@ -55,22 +64,16 @@ class AuthController extends Controller
          $this->validate($request, [
             'email' => 'required|email',
             'password' => 'required'
-        ]);
+         ]);
         
-        $email = $request->input('email');
-        $password = $request->input('password');
-        $user = [
-            'name' => 'Name',
-            'email' => $email,
-            'password' => $password
-        ];
-
-        $response = [
-            'msg' => 'User signed in',
-            'user' => $user
-        ];
-
-        return response()->json($response, 200);
+        $credentials = $request->only('email', 'password');
+        try {
+            if (! $token = JWTAuth::attempt($credentials)) {
+                  return response()->json(['msg' => 'Invalid credentials'], 401);
+            }
+        } catch (JWTException $e) {
+            return response()->json(['msg' => 'Could not create token'], 500);
+        }
+        return response()->json(['token' => $token]);
     }
-
 }
