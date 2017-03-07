@@ -6,9 +6,17 @@ use Illuminate\Http\Request;
 use App\Maker;
 use App\Http\Requests\CreateMakerRequest;
 use App\Vehicle;
+use JWTAuth;
 
 class MakerController extends Controller
 {
+     //Construct for JWT Authentication
+     public function __construct()
+    {
+        $this->middleware('jwt.auth', ['only' => [
+          'update', 'store', 'destroy'
+        ]]);
+    }
     //Index-gets all makers:/makers
     public function index(){
         $makers = Maker::all();
@@ -51,6 +59,10 @@ class MakerController extends Controller
 
     //Store-posts the name and phone data 
     public function store(CreateMakerRequest $request){
+       //JWT Authentication
+        if (!$user = JWTAuth::parseToken()->authenticate()) {
+            return response()->json(['msg' => 'User not found'], 404);
+        }
         $name = $request->input('name');
         $phone = $request->input('phone');
         $maker = new Maker([
@@ -85,6 +97,10 @@ class MakerController extends Controller
      public function update(CreateMakerRequest $request,$id){
         //Checking the maker 
         $maker = Maker::find($id);
+        //JWT Authentication
+        if (!$user = JWTAuth::parseToken()->authenticate()) {
+            return response()->json(['msg' => 'User not found'], 404);
+        } 
         if(!$maker){
             return response()->json(['message'=>'This maker does not exist','code'=>404],404);
         }
@@ -117,6 +133,11 @@ class MakerController extends Controller
     public function destroy($id){
         //Checking whether the Maker Exists
         $maker = Maker::find($id);
+        //JWT Authentication        
+         if (!$user = JWTAuth::parseToken()->authenticate()) {
+            return response()->json(['msg' => 'User not found'], 404);
+        }
+        
         if(!$maker){
             return response()->json(['message'=>'This maker does not exist','code'=>404],404);
         }
